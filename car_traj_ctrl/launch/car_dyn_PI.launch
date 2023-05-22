@@ -1,0 +1,14 @@
+<launch>
+  <node name="bag_recording" pkg="rosbag" type="record" args="-O $(find car_traj_ctrl)/script/recording_PI /car_state /controller_state /ref_traj"/>
+
+  <!--- Run car simulator node -->
+  <node pkg="car_simulator" type="car_sim" respawn="false" name="car_sim" output="screen">
+    <rosparam file="$(find car_simulator)/config/car_params.yaml" command="load" />
+    <rosparam param="/use_sim_time">true</rosparam>
+  </node> 
+
+  <!--- Run linerizing controller node -->
+  <node pkg="car_traj_ctrl" type="car_kin_PI" respawn="false" name="car_kin_PI" output="screen">
+    <rosparam file="$(find car_traj_ctrl)/config/car_kin_PI.yaml" command="load" />
+  </node> 
+</launch>

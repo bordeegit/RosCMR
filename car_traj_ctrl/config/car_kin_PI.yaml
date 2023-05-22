@@ -1,0 +1,16 @@
+# Controller configuration parameters
+  /car_kin_PI/run_period: 0.01          # Node execution period
+
+# Controller parameters
+  /car_kin_PI/P_dist: 0.1               # Distance of point P from odometric center
+  /car_kin_PI/l: 0.26                   # Car length
+  /car_kin_PI/Kpx: 10                 # Proportional weight on x direction
+  /car_kin_PI/Kpy: 10                 # Proportional weight on y direction
+  /car_kin_PI/Ipx: 0.01                 # Integral weight on x direction
+  /car_kin_PI/Ipy: 0.01                 # Integral weight on y direction
+
+# 8-shape trajectory parameters
+  /car_kin_PI/a: 2                      
+  /car_kin_PI/T: 3.8
+
+
