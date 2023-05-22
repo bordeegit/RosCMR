@@ -97,14 +97,21 @@ void car_kin_PI::PeriodicTask(void)
 {
     /*  Generate trajectory */
     double xref, yref;
+    double dxref, dyref;
 
     double xPref, yPref;
     double vPx, vPy;
     const double pi = 3.14159265358979323846;
     const double t = ros::Time::now().toSec();
 
-    xref = a*std::sin((2*pi/T)*t);
-    yref = a*std::sin((2*pi/T)*t)*std::cos((2*pi/T)*t);
+    //TODO: can we assume that velocity of P is the same as the velocity of the robot?
+    //      at least the reference (for the feed-forward)
+
+    double w = 2*pi/T; 
+    xref = a*std::sin(w*t);
+    dxref = w*a*std::cos(w*t);
+    yref = a*std::sin(w*t)*std::cos(w*t);
+    dyref = w*a*(std::pow(std::cos(w*t),2.0)-std::pow(std::sin(w*t),2.0));
 
     /*  Tranforms in P  */
     controller->output_transformation(xP, yP);    
@@ -114,8 +121,11 @@ void car_kin_PI::PeriodicTask(void)
 
     /*  Generate input commands, P Controller*/
     //TODO: add feed-forward term, add integral term
-    vPx = Kpx*(xPref - xP);
-    vPy = Kpy*(yPref - yP);
+    double err_xP, err_yP;
+    err_xP = xPref - xP;
+    err_yP = yPref - yP;
+    vPx = dxref + Kpx*(err_xP);
+    vPy = dyref + Kpy*(err_yP);
 
     //ROS_INFO("xP error: %.2f, yP error: %.2f", xPref - xP, xPref - xP );
     /*  Compute the control action */
@@ -146,6 +156,8 @@ void car_kin_PI::PeriodicTask(void)
     refTrajectoryMsg.data.push_back(time);
     refTrajectoryMsg.data.push_back(xref);
     refTrajectoryMsg.data.push_back(yref);
+    refTrajectoryMsg.data.push_back(err_xP);
+    refTrajectoryMsg.data.push_back(err_yP);
     refTrajectory_publisher.publish(refTrajectoryMsg);
 
 }

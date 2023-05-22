@@ -57,3 +57,4 @@ CMakeLists.txt
 
 #Compiler
 .vscode/*
+car_traj_ctrl/.vscode/*

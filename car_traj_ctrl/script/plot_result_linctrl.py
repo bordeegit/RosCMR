@@ -24,8 +24,12 @@ controllerState_velocity = []
 controllerState_steer = []
 
 # Trajectory generated
+err_time = []
 traj_x = []
 traj_y = []
+err_xP = []
+err_yP = []
+
 
 for topic, msg, t in bag.read_messages():
     if topic == "/car_state":
@@ -44,18 +48,22 @@ for topic, msg, t in bag.read_messages():
         controllerState_steer.append(msg.data[4])
 
     if topic == "/ref_traj":
+        err_time.append(msg.data[0])
         traj_x.append(msg.data[1])
         traj_y.append(msg.data[2])
+        err_xP.append(msg.data[3])
+        err_yP.append(msg.data[4])
+
 
 bag.close()
-"""
-Trajectory Data
+
+#Trajectory Data
 a = 2
 T = 3.8
 xref = a*np.sin(np.multiply(2*math.pi/T,vehicleState_time))
 yref = a*np.multiply(np.sin(np.multiply(2*math.pi/T,vehicleState_time)),
                                  np.cos(np.multiply(2*math.pi/T,vehicleState_time)))
-"""
+
 
 # Plot data
 plt.figure(1)
@@ -99,43 +107,54 @@ plt.plot(vehicleState_time,vehicleState_theta)
 plt.xlabel("Time [s]")
 plt.ylabel("theta [rad]")
 
-"""
+
 plt.figure(4)
 plt.subplot(211)
-plt.plot(controllerState_time,controllerState_vPx)
+plt.plot(controllerState_time,controllerState_velocity)
 plt.xlabel("Time [s]")
-plt.ylabel("Point P x velocity [m/s]")
+plt.ylabel("Long. Velocity Actuation [m/s]")
 plt.subplot(212)
-plt.plot(controllerState_time,controllerState_vPy)
+plt.plot(controllerState_time,controllerState_steer)
 plt.xlabel("Time [s]")
-plt.ylabel("Point P y velocity [m/s]")
-"""
+plt.ylabel("Steer Actuation [m/s]")
 
-#print(len(vehicleState_x)/10)
-#print(len(controllerState_vPx))
+
 
 #Changed index of vehicleState_x/y to match with controllerState size
 #   this will lose some values of vehicleState or add some 0s, but it fixes the issue
 
 #TODO: problem here, if i slice the index of vehicle state by 10 the timing doesn't match, so we get constant error
-"""
-index = len(vehicleState_x[::10])-1
-print(vehicleState_time[index*10])
-print(controllerState_time[index])
 
-err_x = [abs(v - t) for v, t in zip(vehicleState_x[:len(traj_x)], traj_x)]
-err_y = [abs(v - t) for v, t in zip(vehicleState_y[:len(traj_y)], traj_y)]
+traj_x_interp = np.interp(vehicleState_time, err_time, traj_x)
+traj_y_interp = np.interp(vehicleState_time, err_time, traj_y)
+
+err_x = [abs(v - t) for v, t in zip(vehicleState_x, traj_x_interp)]
+err_y = [abs(v - t) for v, t in zip(vehicleState_y, traj_y_interp)]
+
+err_xref = [abs(v - t) for v, t in zip(vehicleState_x, xref)]
 
 plt.figure(5)
 plt.subplot(211)
-plt.plot(controllerState_time,err_x)
+plt.plot(vehicleState_time, err_x)
+plt.plot(vehicleState_time, err_xref, 'r--')
 plt.xlabel("Time [s]")
 plt.ylabel("Error on x [m]")
 plt.subplot(212)
-plt.plot(controllerState_time,err_y)
+plt.plot(vehicleState_time,err_y)
 plt.xlabel("Time [s]")
 plt.ylabel("Error on y [m]")
-"""
+
+
+
+plt.figure(6)
+plt.subplot(211)
+plt.plot(err_time[:len(err_time)],[abs(ele) for ele in err_xP])
+plt.xlabel("Time [s]")
+plt.ylabel("Error on xP [m]")
+plt.subplot(212)
+plt.plot(err_time[:len(err_time)],[abs(ele) for ele in err_yP])
+plt.xlabel("Time [s]")
+plt.ylabel("Error on yP [m]")
 
 plt.show(block=False)
 
