@@ -1,0 +1,21 @@
+# Vehicle parameters
+  /car_sim/m: 2.8                          # Vehicle mass
+  /car_sim/cog_a: 0.14                     # Distance of COG from front axle
+  /car_sim/cog_b: 0.12                     # Distance of COG from rear axle
+  /car_sim/mu: 0.385                       # Ground friction coefficient
+  /car_sim/Cf: 50.0                        # Front cornering stiffness
+  /car_sim/Cr: 120.0                       # Rear cornering stiffness
+  /car_sim/Iz: 0.028                       # Yaw moment of inertia
+
+
+# Vehicle initial state
+  /car_sim/r0: 0.0                         # Initial yaw rate
+  /car_sim/beta0: 0.0                      # Initial sideslip
+  /car_sim/x0: 0.0                         # Initial position x
+  /car_sim/y0: 0.0                         # Initial position y
+  /car_sim/psi0: 0.0                       # Initial heading
+
+# Simulator configuration parameters
+  /car_sim/dt: 0.001                       # Integration step
+  /car_sim/tyre_model: 0                   # Tyre model (0, linear; 1, fiala with saturation; 2, fiala without saturation)
+
