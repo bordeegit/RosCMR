@@ -46,6 +46,10 @@ void car_kin_PI::Prepare(void)
     if (false == Handle.getParam(FullParamName, Ipy))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
+    FullParamName = ros::this_node::getName()+"/Ts";
+    if (false == Handle.getParam(FullParamName, Ts))
+        ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
+
     /* ROS topics */
     vehicleState_subscriber = Handle.subscribe("/car_state", 1, &car_kin_PI::vehicleState_MessageCallback, this);
     vehicleCommand_publisher = Handle.advertise<std_msgs::Float64MultiArray>("/car_input", 1);
@@ -107,11 +111,15 @@ void car_kin_PI::PeriodicTask(void)
     //TODO: can we assume that velocity of P is the same as the velocity of the robot?
     //      at least the reference (for the feed-forward)
 
+    //TODO: add computation of maximum error
+
     double w = 2*pi/T; 
     xref = a*std::sin(w*t);
-    dxref = w*a*std::cos(w*t);
+    dxref = 0;
+    //dxref = w*a*std::cos(w*t);
     yref = a*std::sin(w*t)*std::cos(w*t);
-    dyref = w*a*(std::pow(std::cos(w*t),2.0)-std::pow(std::sin(w*t),2.0));
+    dyref = 0;
+    //dyref = w*a*(std::pow(std::cos(w*t),2.0)-std::pow(std::sin(w*t),2.0));
 
     /*  Tranforms in P  */
     controller->output_transformation(xP, yP);    
@@ -120,12 +128,14 @@ void car_kin_PI::PeriodicTask(void)
     //ROS_INFO("xP: %f, yP: %f, xPref: %f, yPref: %f", xP,yP,xPref,yPref);
 
     /*  Generate input commands, P Controller*/
-    //TODO: add feed-forward term, add integral term
+    //TODO: add integral term
     double err_xP, err_yP;
     err_xP = xPref - xP;
     err_yP = yPref - yP;
-    vPx = dxref + Kpx*(err_xP);
-    vPy = dyref + Kpy*(err_yP);
+    integral_x += err_xP*Ts;
+    integral_y += err_yP*Ts;
+    vPx = dxref + Kpx*err_xP + Ipx*integral_x;
+    vPy = dyref + Kpy*err_yP + Ipy*integral_y;
 
     //ROS_INFO("xP error: %.2f, yP error: %.2f", xPref - xP, xPref - xP );
     /*  Compute the control action */
@@ -149,6 +159,10 @@ void car_kin_PI::PeriodicTask(void)
     controllerStateMsg.data.push_back(vPy);
     controllerStateMsg.data.push_back(v);
     controllerStateMsg.data.push_back(phi);
+    controllerStateMsg.data.push_back(err_xP);
+    controllerStateMsg.data.push_back(err_yP);
+    controllerStateMsg.data.push_back(integral_x);
+    controllerStateMsg.data.push_back(integral_y);
     controllerState_publisher.publish(controllerStateMsg);
 
     /*  Publish reference trajectory */
@@ -156,8 +170,6 @@ void car_kin_PI::PeriodicTask(void)
     refTrajectoryMsg.data.push_back(time);
     refTrajectoryMsg.data.push_back(xref);
     refTrajectoryMsg.data.push_back(yref);
-    refTrajectoryMsg.data.push_back(err_xP);
-    refTrajectoryMsg.data.push_back(err_yP);
     refTrajectory_publisher.publish(refTrajectoryMsg);
 
 }

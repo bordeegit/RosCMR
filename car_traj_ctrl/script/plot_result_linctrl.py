@@ -22,13 +22,16 @@ controllerState_vPx = []
 controllerState_vPy = []
 controllerState_velocity = []
 controllerState_steer = []
+controllerState_xPerr = []
+controllerState_yPerr = []
+controllerState_xPintegral = []
+controllerState_yPintegral = []
+
 
 # Trajectory generated
 err_time = []
 traj_x = []
 traj_y = []
-err_xP = []
-err_yP = []
 
 
 for topic, msg, t in bag.read_messages():
@@ -46,13 +49,16 @@ for topic, msg, t in bag.read_messages():
         controllerState_vPy.append(msg.data[2])
         controllerState_velocity.append(msg.data[3])
         controllerState_steer.append(msg.data[4])
+        controllerState_xPerr.append(msg.data[5])
+        controllerState_yPerr.append(msg.data[6])
+        controllerState_xPintegral.append(msg.data[7])
+        controllerState_yPintegral.append(msg.data[8])
+
 
     if topic == "/ref_traj":
         err_time.append(msg.data[0])
         traj_x.append(msg.data[1])
         traj_y.append(msg.data[2])
-        err_xP.append(msg.data[3])
-        err_yP.append(msg.data[4])
 
 
 bag.close()
@@ -145,16 +151,26 @@ plt.xlabel("Time [s]")
 plt.ylabel("Error on y [m]")
 
 
-
 plt.figure(6)
 plt.subplot(211)
-plt.plot(err_time[:len(err_time)],[abs(ele) for ele in err_xP])
+plt.plot(err_time[:len(err_time)],[abs(ele) for ele in controllerState_xPerr])
 plt.xlabel("Time [s]")
 plt.ylabel("Error on xP [m]")
 plt.subplot(212)
-plt.plot(err_time[:len(err_time)],[abs(ele) for ele in err_yP])
+plt.plot(err_time[:len(err_time)],[abs(ele) for ele in controllerState_yPerr])
 plt.xlabel("Time [s]")
 plt.ylabel("Error on yP [m]")
+
+
+plt.figure(7)
+plt.subplot(211)
+plt.plot(controllerState_time, controllerState_xPintegral)
+plt.xlabel("Time [s]")
+plt.ylabel("Integral term xP")
+plt.subplot(212)
+plt.plot(controllerState_time, controllerState_yPintegral)
+plt.xlabel("Time [s]")
+plt.ylabel("Integral term yP")
 
 plt.show(block=False)
 

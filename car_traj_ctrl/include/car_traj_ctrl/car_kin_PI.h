@@ -23,6 +23,8 @@ class car_kin_PI
     double xP=0.0, yP=0.0; 
     double Kpx, Kpy;
     double Ipx, Ipy;
+    double Ts;
+    double integral_x = 0, integral_y = 0;
 
     /* ROS topic callbacks */
     void vehicleState_MessageCallback(const std_msgs::Float64MultiArray::ConstPtr& msg);

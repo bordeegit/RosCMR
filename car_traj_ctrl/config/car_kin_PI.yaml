@@ -6,8 +6,9 @@
   /car_kin_PI/l: 0.26                   # Car length
   /car_kin_PI/Kpx: 10                 # Proportional weight on x direction
   /car_kin_PI/Kpy: 10                 # Proportional weight on y direction
-  /car_kin_PI/Ipx: 0.01                 # Integral weight on x direction
-  /car_kin_PI/Ipy: 0.01                 # Integral weight on y direction
+  /car_kin_PI/Ipx: 0                 # Integral weight on x direction
+  /car_kin_PI/Ipy: 0                  # Integral weight on y direction
+  /car_kin_PI/Ts: 0.01                  # Sampling Time
 
 # 8-shape trajectory parameters
   /car_kin_PI/a: 2                      
