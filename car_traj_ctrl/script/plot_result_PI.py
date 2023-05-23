@@ -15,6 +15,9 @@ vehicleState_y = []
 vehicleState_theta = []
 vehicleState_velocity = []
 vehicleState_steer = []
+vehicleState_forceFront = []
+vehicleState_forceRear = []
+
 
 # State published by the controller
 controllerState_time = []
@@ -42,6 +45,9 @@ for topic, msg, t in bag.read_messages():
         vehicleState_theta.append(msg.data[3])
         vehicleState_velocity.append(msg.data[4])
         vehicleState_steer.append(msg.data[5])
+        vehicleState_forceFront.append(msg.data[10])
+        vehicleState_forceRear.append(msg.data[11])
+
 
     if topic == "/controller_state":
         controllerState_time.append(msg.data[0])
@@ -83,17 +89,17 @@ plt.legend(loc="best")
 plt.xlabel("x [m]")
 plt.ylabel("y [m]")
 
-"""
+
 plt.figure(2)
 plt.subplot(211)
-plt.plot(vehicleState_time,vehicleState_velocity)
+plt.plot(vehicleState_time,vehicleState_forceFront)
 plt.xlabel("Time [s]")
-plt.ylabel("Longitudinal velocity [m/s]")
+plt.ylabel("Force Front wheel [m/s]")
 plt.subplot(212)
-plt.plot(vehicleState_time,vehicleState_steer)
+plt.plot(vehicleState_time,vehicleState_forceRear)
 plt.xlabel("Time [s]")
-plt.ylabel("Steer position [rad]")
-"""
+plt.ylabel("Force Rear wheel [rad]")
+
 
 plt.figure(3)
 plt.subplot(311)
@@ -109,20 +115,28 @@ plt.xlabel("Time [s]")
 plt.ylabel("y [m]")
 plt.legend(loc="best")
 plt.subplot(313)
-plt.plot(vehicleState_time,vehicleState_theta)
+plt.plot(vehicleState_time,[th*180/math.pi for th in vehicleState_theta])
 plt.xlabel("Time [s]")
-plt.ylabel("theta [rad]")
+plt.ylabel("theta [deg]")
 
 
 plt.figure(4)
-plt.subplot(211)
+plt.subplot(221)
 plt.plot(controllerState_time,controllerState_velocity)
 plt.xlabel("Time [s]")
 plt.ylabel("Long. Velocity Actuation [m/s]")
-plt.subplot(212)
+plt.subplot(222)
 plt.plot(controllerState_time,controllerState_steer)
 plt.xlabel("Time [s]")
 plt.ylabel("Steer Actuation [m/s]")
+plt.subplot(223)
+plt.plot(controllerState_time,controllerState_vPx)
+plt.xlabel("Time [s]")
+plt.ylabel("vPx [m/s]")
+plt.subplot(224)
+plt.plot(controllerState_time,controllerState_vPy)
+plt.xlabel("Time [s]")
+plt.ylabel("vPy [m/s]")
 
 
 

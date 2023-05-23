@@ -20,10 +20,12 @@ class car_kin_PI
     /* Parameters from ROS parameter server */
     double P_dist, l;
     double a, T;
-    double xP=0.0, yP=0.0; 
+    double xP=0.0, yP=0.0;
+    double xref, yref=0.0, dxref, dyref; 
     double Kpx, Kpy;
     double Ipx, Ipy;
     double Ts;
+    double err_xP, err_yP;
     double integral_x = 0, integral_y = 0;
 
     /* ROS topic callbacks */
@@ -31,7 +33,14 @@ class car_kin_PI
 
     /* Node periodic task */
     void PeriodicTask(void);
-    
+
+    /* Trajectory generation function*/  
+    void trajectoryGeneration_eight(void);
+    void trajectoryGeneration_step(void);
+
+    /* Control*/
+    void control_FFPI(double& xPref, double& yPref, double& vPx,double& vPy);
+
     /* Node state variables */
     car_kin_fblin* controller;
 

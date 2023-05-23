@@ -97,39 +97,51 @@ void car_kin_PI::vehicleState_MessageCallback(const std_msgs::Float64MultiArray:
     controller->set_carState(msg->data.at(1), msg->data.at(2), msg->data.at(3));
 }
 
-void car_kin_PI::PeriodicTask(void)
-{
-    /*  Generate trajectory */
-    double xref, yref;
-    double dxref, dyref;
-
-    double xPref, yPref;
-    double vPx, vPy;
+void car_kin_PI::trajectoryGeneration_eight(void){
+    
     const double pi = 3.14159265358979323846;
     const double t = ros::Time::now().toSec();
+    double w = 2*pi/T; 
+    xref = a*std::sin(w*t);
+    dxref = w*a*std::cos(w*t);
+    yref = a*std::sin(w*t)*std::cos(w*t);
+    dyref = w*a*(std::pow(std::cos(w*t),2.0)-std::pow(std::sin(w*t),2.0));
+    //dxref = 0;
+    //dyref = 0;
 
     //TODO: can we assume that velocity of P is the same as the velocity of the robot?
     //      at least the reference (for the feed-forward)
 
-    //TODO: add computation of maximum error
+}
 
-    double w = 2*pi/T; 
-    xref = a*std::sin(w*t);
+void car_kin_PI::trajectoryGeneration_step(void){
+
+    const double t = ros::Time::now().toSec();
+    xref = t/2;
+
+    /*
+    if (t <= 10){
+        xref = t;
+    }
+    else{
+        xref = 0;
+    }
+    */
+
+    
+    if(std::fmod(t,20) < 10 ){
+        yref = 0;
+    }
+    else{
+        yref = 10;
+    }
     dxref = 0;
-    //dxref = w*a*std::cos(w*t);
-    yref = a*std::sin(w*t)*std::cos(w*t);
     dyref = 0;
-    //dyref = w*a*(std::pow(std::cos(w*t),2.0)-std::pow(std::sin(w*t),2.0));
 
-    /*  Tranforms in P  */
-    controller->output_transformation(xP, yP);    
-    controller->reference_transformation(xref, yref, xPref, yPref);
+}
 
-    //ROS_INFO("xP: %f, yP: %f, xPref: %f, yPref: %f", xP,yP,xPref,yPref);
+void car_kin_PI::control_FFPI(double& xPref, double& yPref, double& vPx,double& vPy){
 
-    /*  Generate input commands, P Controller*/
-    //TODO: add integral term
-    double err_xP, err_yP;
     err_xP = xPref - xP;
     err_yP = yPref - yP;
     integral_x += err_xP*Ts;
@@ -137,7 +149,27 @@ void car_kin_PI::PeriodicTask(void)
     vPx = dxref + Kpx*err_xP + Ipx*integral_x;
     vPy = dyref + Kpy*err_yP + Ipy*integral_y;
 
-    //ROS_INFO("xP error: %.2f, yP error: %.2f", xPref - xP, xPref - xP );
+}
+
+void car_kin_PI::PeriodicTask(void)
+{
+
+    //TODO: add computation of maximum error
+
+    /*  Generate trajectory */
+    //trajectoryGeneration_eight();
+    trajectoryGeneration_step();
+
+    /*  Tranforms in P  */
+    double xPref, yPref;
+    double vPx, vPy;
+
+    controller->output_transformation(xP, yP);    
+    controller->reference_transformation(xref, yref, xPref, yPref);
+
+    /*  Generate reference commands, FF+PI Controller*/
+    control_FFPI(xPref, yPref, vPx, vPy);
+
     /*  Compute the control action */
     double v, phi;
     controller->control_transformation(vPx, vPy, v, phi);
