@@ -30,19 +30,19 @@ void car_kin_PI::Prepare(void)
     if (false == Handle.getParam(FullParamName, T))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
-    FullParamName = ros::this_node::getName()+"/Kpx";
+    FullParamName = ros::this_node::getName()+"/Kp";
     if (false == Handle.getParam(FullParamName, Kpx))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
     
-    FullParamName = ros::this_node::getName()+"/Kpy";
+    FullParamName = ros::this_node::getName()+"/Kp";
     if (false == Handle.getParam(FullParamName, Kpy))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
-    FullParamName = ros::this_node::getName()+"/Ipx";
+    FullParamName = ros::this_node::getName()+"/Ip";
     if (false == Handle.getParam(FullParamName, Ipx))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
-    FullParamName = ros::this_node::getName()+"/Ipy";
+    FullParamName = ros::this_node::getName()+"/Ip";
     if (false == Handle.getParam(FullParamName, Ipy))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
@@ -133,10 +133,20 @@ void car_kin_PI::trajectoryGeneration_step(void){
         yref = 0;
     }
     else{
-        yref = 10;
+        yref = 0.5;
     }
     dxref = 0;
     dyref = 0;
+
+}
+
+void car_kin_PI::trajectoryGeneration_sin(void){
+
+    const double t = ros::Time::now().toSec();
+    xref = t;
+    yref = sin(t);
+    dxref = 1;
+    dyref = cos(t);
 
 }
 
@@ -159,6 +169,7 @@ void car_kin_PI::PeriodicTask(void)
     /*  Generate trajectory */
     //trajectoryGeneration_eight();
     trajectoryGeneration_step();
+    //trajectoryGeneration_sin();
 
     /*  Tranforms in P  */
     double xPref, yPref;
@@ -173,6 +184,19 @@ void car_kin_PI::PeriodicTask(void)
     /*  Compute the control action */
     double v, phi;
     controller->control_transformation(vPx, vPy, v, phi);
+    
+    if(v>2){
+        v = 2;
+    }else if (v<-2){
+        v = -2;
+    }
+
+    if(phi>1){
+        phi = 1;
+    }else if (phi<-1){
+        phi = -1;
+    }
+    
 
     double time;
     time = ros::Time::now().toSec();

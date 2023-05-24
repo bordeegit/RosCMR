@@ -37,6 +37,8 @@ class car_kin_PI
     /* Trajectory generation function*/  
     void trajectoryGeneration_eight(void);
     void trajectoryGeneration_step(void);
+    void trajectoryGeneration_sin(void);
+
 
     /* Control*/
     void control_FFPI(double& xPref, double& yPref, double& vPx,double& vPy);
@@ -55,4 +57,4 @@ class car_kin_PI
 
 };
 
-#endif /* CAR_KIN_LINCTRL_H_ */
+#endif /* CAR_KIN_PI_H_ */
