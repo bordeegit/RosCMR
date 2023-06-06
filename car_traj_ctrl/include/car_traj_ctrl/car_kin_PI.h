@@ -3,7 +3,7 @@
 
 #include "ros/ros.h"
 #include <std_msgs/Float64MultiArray.h>
-#include <car_kin_fblin.h>
+#include <car_traj_ctrl/car_kin_fblin.h>
 
 #define NAME_OF_THIS_NODE "car_kin_PI"
 
@@ -23,10 +23,11 @@ class car_kin_PI
     double xP=0.0, yP=0.0;
     double xref, yref=0.0, dxref, dyref; 
     double Kpx, Kpy;
-    double Ipx, Ipy;
+    double Tix, Tiy;
     double Ts;
     double err_xP, err_yP;
-    double integral_x = 0, integral_y = 0;
+    double integral_x = 0, integral_y = 0; 
+    double err_X_max = 0, err_Y_max = 0;
 
     /* ROS topic callbacks */
     void vehicleState_MessageCallback(const std_msgs::Float64MultiArray::ConstPtr& msg);

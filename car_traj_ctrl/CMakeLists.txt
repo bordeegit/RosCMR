@@ -120,11 +120,14 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(car_kin_linctrl src/car_kin_linctrl.cpp src/car_kin_linctrl_node.cpp src/car_kin_fblin.cpp)
-target_link_libraries(car_kin_linctrl ${catkin_LIBRARIES})
+#add_executable(car_kin_linctrl src/car_kin_linctrl.cpp src/car_kin_linctrl_node.cpp src/car_kin_fblin.cpp)
+#target_link_libraries(car_kin_linctrl ${catkin_LIBRARIES})
 
 add_executable(car_kin_PI src/car_kin_PI.cpp src/car_kin_PI_node.cpp src/car_kin_fblin.cpp)
 target_link_libraries(car_kin_PI ${catkin_LIBRARIES})
+
+add_executable(car_kin_sim src/car_kin_sim.cpp src/car_kin_sim_node.cpp src/car_kin_ode.cpp)
+target_link_libraries(car_kin_sim ${catkin_LIBRARIES})
 
 
 

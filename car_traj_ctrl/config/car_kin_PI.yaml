@@ -4,8 +4,11 @@
 # Controller parameters
   /car_kin_PI/P_dist: 0.05               # Distance of point P from odometric center
   /car_kin_PI/l: 0.26                   # Car length
-  /car_kin_PI/Kp: 1               # Proportional weight on x direction
-  /car_kin_PI/Ip: 3                 # Integral weight on x direction
+  /car_kin_PI/Kpx: 4.33               # Proportional weight on x direction
+  /car_kin_PI/Tix: 0.035                 # Integral weight on x direction
+  /car_kin_PI/Kpy: 4.33               # Proportional weight on y direction
+  /car_kin_PI/Tiy: 0.035                # Integral weight on y direction
+
   /car_kin_PI/Ts: 0.01                  # Sampling Time
 
 # 8-shape trajectory parameters

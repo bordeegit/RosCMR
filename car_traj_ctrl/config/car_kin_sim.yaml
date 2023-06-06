@@ -1,0 +1,11 @@
+# Simulator configuration parameters
+  /car_kin_sim/dt: 0.001                   # Integration step
+
+# Vehicle parameters
+  /car_kin_sim/L: 0.26                     # Vehicle length
+
+# Vehicle initial state
+  /car_kin_sim/x0: 0.0                     # Initial position x
+  /car_kin_sim/y0: 0.0                     # Initial position y
+  /car_kin_sim/theta0: 0.0                 # Initial heading
+

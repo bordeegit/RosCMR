@@ -58,7 +58,7 @@ void car_ode::integrate()
     using namespace std::placeholders;
     stepper.do_step(std::bind(&car_ode::vehicle_ode, this, _1, _2, _3), state, t, dt);
 
-    // Update time and steering
+    // Update time
     t += dt;
 }
 
@@ -109,7 +109,7 @@ void car_ode::vehicle_ode(const state_type &state, state_type &dstate, double t)
                 Fyr = Cr*zr*(-1+std::abs(zr)/zr_sl-std::pow(zr,2.0)/(3*std::pow(zr_sl,2.0)));
             }
             else {
-                 Fyr = -mu*Fzr*(double)sign(alphar);
+                Fyr = -mu*Fzr*(double)sign(alphar);
             }
             break;
 

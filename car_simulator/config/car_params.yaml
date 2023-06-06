@@ -17,5 +17,5 @@
 
 # Simulator configuration parameters
   /car_sim/dt: 0.001                       # Integration step
-  /car_sim/tyre_model: 0                   # Tyre model (0, linear; 1, fiala with saturation; 2, fiala without saturation)
+  /car_sim/tyre_model: 0                  # Tyre model (0, linear; 1, fiala with saturation; 2, fiala without saturation)
 

@@ -3,7 +3,7 @@
 
 #include "ros/ros.h"
 #include <std_msgs/Float64MultiArray.h>
-#include <car_kin_fblin.h>
+#include <car_traj_ctrl/car_kin_fblin.h>
 
 #define NAME_OF_THIS_NODE "car_kin_linctrl"
 

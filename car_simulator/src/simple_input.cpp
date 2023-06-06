@@ -45,12 +45,12 @@ void simple_input::PeriodicTask(void)
     else if (ros::Time::now().toSec()>5.0 && ros::Time::now().toSec()<= 10.0)
     {
         speed = 1.0;
-        steer = 0.3;
+        steer = 1.0;
     }
     else
     {
         speed = 1.0;
-        steer = 0.0;
+        steer = 2.0;
     }
 
     /* Publishing vehicle commands (t, msg->data[0]; velocity, msg->data[1]; steer, msg->data[2]) */

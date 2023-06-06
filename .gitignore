@@ -50,11 +50,16 @@ qtcreator-*
 # Catkin custom files
 CATKIN_IGNORE
 
-# Additional Folders
+# Additional Folders/files
 bicycle_kin_ctrl/*
 cat_flat_ctrl/*
+bicycle_sim/*
+bicycle_kin_ctrl/*
+singletrack_sim/*
 CMakeLists.txt
+car_traj_ctrl/script/*.bag
 
 #Compiler
 .vscode/*
 car_traj_ctrl/.vscode/*
+

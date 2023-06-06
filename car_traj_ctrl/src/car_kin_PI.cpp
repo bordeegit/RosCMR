@@ -30,20 +30,20 @@ void car_kin_PI::Prepare(void)
     if (false == Handle.getParam(FullParamName, T))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
-    FullParamName = ros::this_node::getName()+"/Kp";
+    FullParamName = ros::this_node::getName()+"/Kpx";
     if (false == Handle.getParam(FullParamName, Kpx))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
-    
-    FullParamName = ros::this_node::getName()+"/Kp";
+
+    FullParamName = ros::this_node::getName()+"/Kpy";
     if (false == Handle.getParam(FullParamName, Kpy))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
-    FullParamName = ros::this_node::getName()+"/Ip";
-    if (false == Handle.getParam(FullParamName, Ipx))
+    FullParamName = ros::this_node::getName()+"/Tix";
+    if (false == Handle.getParam(FullParamName, Tix))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
-    FullParamName = ros::this_node::getName()+"/Ip";
-    if (false == Handle.getParam(FullParamName, Ipy))
+    FullParamName = ros::this_node::getName()+"/Tiy";
+    if (false == Handle.getParam(FullParamName, Tiy))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
     FullParamName = ros::this_node::getName()+"/Ts";
@@ -128,7 +128,7 @@ void car_kin_PI::trajectoryGeneration_step(void){
     }
     */
 
-    
+    // Goes up/down every 10 secs
     if(std::fmod(t,20) < 10 ){
         yref = 0;
     }
@@ -154,10 +154,23 @@ void car_kin_PI::control_FFPI(double& xPref, double& yPref, double& vPx,double& 
 
     err_xP = xPref - xP;
     err_yP = yPref - yP;
+
+    if (err_X_max < std::fabs(err_xP) || err_Y_max < std::fabs(err_yP)) {
+        if (err_X_max < std::fabs(err_xP)) {
+            err_X_max = std::fabs(err_xP); 
+        } else {
+            err_Y_max = std::fabs(err_yP);
+        }
+        ROS_INFO("Last maximum error (X, Y) : (%.4f, %.4f)", err_X_max, err_Y_max);
+    }
+
     integral_x += err_xP*Ts;
     integral_y += err_yP*Ts;
-    vPx = dxref + Kpx*err_xP + Ipx*integral_x;
-    vPy = dyref + Kpy*err_yP + Ipy*integral_y;
+    vPx = dxref + Kpx*err_xP + integral_x*Tix;
+    vPy = dyref + Kpy*err_yP + integral_y*Tiy;
+
+    // Controller Form 
+    // vP = dref + Kp*(err_xP + 1/Ti*integral_x)
 
 }
 
@@ -167,8 +180,8 @@ void car_kin_PI::PeriodicTask(void)
     //TODO: add computation of maximum error
 
     /*  Generate trajectory */
-    //trajectoryGeneration_eight();
-    trajectoryGeneration_step();
+    trajectoryGeneration_eight();
+    //trajectoryGeneration_step();
     //trajectoryGeneration_sin();
 
     /*  Tranforms in P  */
@@ -185,16 +198,20 @@ void car_kin_PI::PeriodicTask(void)
     double v, phi;
     controller->control_transformation(vPx, vPy, v, phi);
     
-    if(v>2){
-        v = 2;
-    }else if (v<-2){
-        v = -2;
+
+    // Saturation, arbitrary values
+    double V_sat = 6, Phi_sat = 2;
+    
+    if(v>V_sat){
+        v = V_sat;
+    }else if (v<-V_sat){
+        v = -V_sat;
     }
 
-    if(phi>1){
-        phi = 1;
-    }else if (phi<-1){
-        phi = -1;
+    if(phi>Phi_sat){
+        phi = Phi_sat;
+    }else if (phi<-Phi_sat){
+        phi = -Phi_sat;
     }
     
 
