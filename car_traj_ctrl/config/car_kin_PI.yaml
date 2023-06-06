@@ -13,6 +13,6 @@
 
 # 8-shape trajectory parameters
   /car_kin_PI/a: 2                      
-  /car_kin_PI/T: 3.8
+  /car_kin_PI/T: 3.8     #default : 3.8, -25% is 2.85
 
 

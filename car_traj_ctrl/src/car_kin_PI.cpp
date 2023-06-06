@@ -174,6 +174,24 @@ void car_kin_PI::control_FFPI(double& xPref, double& yPref, double& vPx,double& 
 
 }
 
+void car_kin_PI::controlSaturation(double& v, double& phi){
+
+    double V_sat = 6, Phi_sat = 2;
+    
+    if(v>V_sat){
+        v = V_sat;
+    }else if (v<-V_sat){
+        v = -V_sat;
+    }
+
+    if(phi>Phi_sat){
+        phi = Phi_sat;
+    }else if (phi<-Phi_sat){
+        phi = -Phi_sat;
+    }
+
+}
+
 void car_kin_PI::PeriodicTask(void)
 {
 
@@ -199,21 +217,9 @@ void car_kin_PI::PeriodicTask(void)
     controller->control_transformation(vPx, vPy, v, phi);
     
 
-    // Saturation, arbitrary values
-    double V_sat = 6, Phi_sat = 2;
-    
-    if(v>V_sat){
-        v = V_sat;
-    }else if (v<-V_sat){
-        v = -V_sat;
-    }
+    /* Saturation */
+    //controlSaturation(v, phi);
 
-    if(phi>Phi_sat){
-        phi = Phi_sat;
-    }else if (phi<-Phi_sat){
-        phi = -Phi_sat;
-    }
-    
 
     double time;
     time = ros::Time::now().toSec();

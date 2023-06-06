@@ -43,6 +43,7 @@ class car_kin_PI
 
     /* Control*/
     void control_FFPI(double& xPref, double& yPref, double& vPx,double& vPy);
+    void controlSaturation(double& v, double& phi);
 
     /* Node state variables */
     car_kin_fblin* controller;
