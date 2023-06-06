@@ -5,6 +5,9 @@
 #include <std_msgs/Float64MultiArray.h>
 #include <car_traj_ctrl/car_kin_fblin.h>
 
+#include <dynamic_reconfigure/server.h>
+#include <car_traj_ctrl/gainPIConfig.h>
+
 #define NAME_OF_THIS_NODE "car_kin_PI"
 
 
@@ -16,6 +19,10 @@ class car_kin_PI
     /* ROS topics */
     ros::Subscriber vehicleState_subscriber;
     ros::Publisher vehicleCommand_publisher, controllerState_publisher, refTrajectory_publisher;
+
+    /* Dynamic Reconfigure*/
+    dynamic_reconfigure::Server<car_traj_ctrl::gainPIConfig> server;
+    dynamic_reconfigure::Server<car_traj_ctrl::gainPIConfig>::CallbackType f;
 
     /* Parameters from ROS parameter server */
     double P_dist, l;
@@ -32,6 +39,9 @@ class car_kin_PI
     /* ROS topic callbacks */
     void vehicleState_MessageCallback(const std_msgs::Float64MultiArray::ConstPtr& msg);
 
+    /* Dynamic Reconfigure callback*/
+    void DynReconfigCallback(car_traj_ctrl::gainPIConfig &config, uint32_t level);
+
     /* Node periodic task */
     void PeriodicTask(void);
 
@@ -39,7 +49,6 @@ class car_kin_PI
     void trajectoryGeneration_eight(void);
     void trajectoryGeneration_step(void);
     void trajectoryGeneration_sin(void);
-
 
     /* Control*/
     void control_FFPI(double& xPref, double& yPref, double& vPx,double& vPy);

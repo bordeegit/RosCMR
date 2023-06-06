@@ -11,6 +11,11 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  dynamic_reconfigure
+)
+
+generate_dynamic_reconfigure_options(
+  config/gainPI.cfg
 )
 
 ## System dependencies are found with CMake's conventions
@@ -105,7 +110,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES car_traj_ctrl
-  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs dynamic_reconfigure
 #  DEPENDS system_lib
 )
 
@@ -124,6 +129,7 @@ include_directories(
 #target_link_libraries(car_kin_linctrl ${catkin_LIBRARIES})
 
 add_executable(car_kin_PI src/car_kin_PI.cpp src/car_kin_PI_node.cpp src/car_kin_fblin.cpp)
+add_dependencies(car_kin_PI ${PROJECT_NAME}_gencfg)
 target_link_libraries(car_kin_PI ${catkin_LIBRARIES})
 
 add_executable(car_kin_sim src/car_kin_sim.cpp src/car_kin_sim_node.cpp src/car_kin_ode.cpp)

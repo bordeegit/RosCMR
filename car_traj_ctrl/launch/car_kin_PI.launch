@@ -1,7 +1,18 @@
 <launch>
-  <node pkg="rqt_multiplot" type="rqt_multiplot" name="multiplot" args="--multiplot-config $(find car_traj_ctrl)/script/xyposition.xml --multiplot-run-all"/>
 
-  <node name="bag_recording" pkg="rosbag" type="record" args="-O $(find car_traj_ctrl)/script/rec_kin_PI /car_state /controller_state /ref_traj"/>
+  <!--- Argument from command line -->
+  <arg name="tune" default=False />
+
+  <!--- Run multiplot for visualization -->
+  <node pkg="rqt_multiplot" type="rqt_multiplot" name="multiplot" args="--multiplot-config $(find car_traj_ctrl)/config/xyposition.xml --multiplot-run-all"/>
+
+  <!--- Start bag recording -->
+  <node name="bag_recording" pkg="rosbag" type="record" args="-O $(find car_traj_ctrl)/script/rec_kin /car_state /controller_state /ref_traj"/>
+  
+  <!--- Run dynamic reconfigure if 'tune' is set to true -->
+  <group if="$(arg tune)">
+    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="reconfigure"/>
+  </group>
 
   <!--- Run car simulator node -->
   <node pkg="car_traj_ctrl" type="car_kin_sim" respawn="false" name="car_kin_sim" output="screen">

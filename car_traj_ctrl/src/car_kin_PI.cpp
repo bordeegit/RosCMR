@@ -63,6 +63,10 @@ void car_kin_PI::Prepare(void)
     // Initialize controller parameters
     controller->set_carParam(l);
 
+    /* Dynamic reconfigure init */
+    f = boost::bind(&car_kin_PI::DynReconfigCallback, this, _1, _2);
+    server.setCallback(f);
+
     ROS_INFO("Node %s ready to run.", ros::this_node::getName().c_str());
 }
 
@@ -88,6 +92,19 @@ void car_kin_PI::Shutdown(void)
     delete controller;
 
     ROS_INFO("Node %s shutting down.", ros::this_node::getName().c_str());
+}
+
+void car_kin_PI::DynReconfigCallback(car_traj_ctrl::gainPIConfig &config, uint32_t level) {
+  
+  Kpx = config.Kp;
+  Kpy = config.Kp; 
+  Tix = config.Ti;
+  Tiy = config.Ti; 
+
+  
+  ROS_INFO("Gains updated to: Kp = %f, Ti = %f", config.Kp, config.Ti);
+  
+
 }
 
 void car_kin_PI::vehicleState_MessageCallback(const std_msgs::Float64MultiArray::ConstPtr& msg)

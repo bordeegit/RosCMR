@@ -2,17 +2,17 @@
   /car_kin_PI/run_period: 0.01          # Node execution period
 
 # Controller parameters
-  /car_kin_PI/P_dist: 0.05               # Distance of point P from odometric center
+  /car_kin_PI/P_dist: 0.05              # Distance of point P from odometric center
   /car_kin_PI/l: 0.26                   # Car length
-  /car_kin_PI/Kpx: 4.33               # Proportional weight on x direction
-  /car_kin_PI/Tix: 0.035                 # Integral weight on x direction
-  /car_kin_PI/Kpy: 4.33               # Proportional weight on y direction
+  /car_kin_PI/Kpx: 4.33                 # Proportional weight on x direction
+  /car_kin_PI/Tix: 0.035                # Integral weight on x direction
+  /car_kin_PI/Kpy: 4.33                 # Proportional weight on y direction
   /car_kin_PI/Tiy: 0.035                # Integral weight on y direction
 
   /car_kin_PI/Ts: 0.01                  # Sampling Time
 
 # 8-shape trajectory parameters
   /car_kin_PI/a: 2                      
-  /car_kin_PI/T: 3.8     #default : 3.8, -25% is 2.85
+  /car_kin_PI/T: 3.8                    # Default : 3.8, -25% is 2.85
 
 
