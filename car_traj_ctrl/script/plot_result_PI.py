@@ -150,6 +150,8 @@ traj_y_interp = np.interp(vehicleState_time, err_time, traj_y)
 
 err_x = [abs(v - t) for v, t in zip(vehicleState_x, traj_x_interp)]
 err_y = [abs(v - t) for v, t in zip(vehicleState_y, traj_y_interp)]
+print("Maximum error on X : {}".format(max(err_x)))
+print("Maximum error on Y : {}".format(max(err_y)))
 
 err_xref = [abs(v - t) for v, t in zip(vehicleState_x, xref)]
 
