@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as numint
 
+KIN_FLAG = False
+
 # Read data from bag
 bag = rosbag.Bag(sys.argv[1])
 
@@ -45,9 +47,11 @@ for topic, msg, t in bag.read_messages():
         vehicleState_theta.append(msg.data[3])
         vehicleState_velocity.append(msg.data[4])
         vehicleState_steer.append(msg.data[5])
-        vehicleState_forceFront.append(msg.data[10])
-        vehicleState_forceRear.append(msg.data[11])
-
+        try:
+            vehicleState_forceFront.append(msg.data[10])
+            vehicleState_forceRear.append(msg.data[11])
+        except:
+            KIN_FLAG = True
 
     if topic == "/controller_state":
         controllerState_time.append(msg.data[0])
@@ -89,16 +93,16 @@ plt.legend(loc="best")
 plt.xlabel("x [m]")
 plt.ylabel("y [m]")
 
-
-plt.figure(2)
-plt.subplot(211)
-plt.plot(vehicleState_time,vehicleState_forceFront)
-plt.xlabel("Time [s]")
-plt.ylabel("Force Front wheel [m/s]")
-plt.subplot(212)
-plt.plot(vehicleState_time,vehicleState_forceRear)
-plt.xlabel("Time [s]")
-plt.ylabel("Force Rear wheel [rad]")
+if not KIN_FLAG:
+    plt.figure(2)
+    plt.subplot(211)
+    plt.plot(vehicleState_time,vehicleState_forceFront)
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force Front wheel [m/s]")
+    plt.subplot(212)
+    plt.plot(vehicleState_time,vehicleState_forceRear)
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force Rear wheel [rad]")
 
 
 plt.figure(3)
@@ -150,8 +154,10 @@ traj_y_interp = np.interp(vehicleState_time, err_time, traj_y)
 
 err_x = [abs(v - t) for v, t in zip(vehicleState_x, traj_x_interp)]
 err_y = [abs(v - t) for v, t in zip(vehicleState_y, traj_y_interp)]
-print("Maximum error on X : {}".format(max(err_x)))
-print("Maximum error on Y : {}".format(max(err_y)))
+print("Maximum error on X : {}".format(max(err_x[5000::])))
+print("Maximum error on Y : {}".format(max(err_y[5000::])))
+
+print("Size : {}".format(len(err_x)))
 
 err_xref = [abs(v - t) for v, t in zip(vehicleState_x, xref)]
 
