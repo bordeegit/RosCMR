@@ -1,5 +1,8 @@
 <launch>
 
+  <!--- Modifing ROS console output format for readability -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}]: ${message}"/>
+
   <!--- Arguments from command line -->
   <arg name="Q4" default="False"/>
   <arg name="tune" default="False"/>

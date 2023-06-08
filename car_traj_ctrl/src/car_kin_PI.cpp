@@ -96,14 +96,13 @@ void car_kin_PI::Shutdown(void)
 
 void car_kin_PI::DynReconfigCallback(car_traj_ctrl::gainPIConfig &config, uint32_t level) {
   
-  Kpx = config.Kp;
-  Kpy = config.Kp; 
-  Tix = config.Ti;
-  Tiy = config.Ti; 
+  Kpx = config.Kpx;
+  Kpy = config.Kpy; 
+  Tix = config.Tix;
+  Tiy = config.Tiy; 
 
   
-  ROS_INFO("Gains updated to: Kp = %f, Ti = %f", config.Kp, config.Ti);
-  
+  ROS_INFO("[GainsUpdate] Kpx: %f Kpy: %f Tix: %f Tiy: %f", config.Kpx, config.Kpy, config.Tix, config.Tiy);
 
 }
 
