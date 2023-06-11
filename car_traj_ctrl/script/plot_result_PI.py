@@ -105,6 +105,8 @@ if not KIN_FLAG:
     plt.plot(vehicleState_time,vehicleState_forceRear)
     plt.xlabel("Time [s]")
     plt.ylabel("Force Rear wheel [N]")
+    print("Maximum Lateral force on Front wheel : {}".format(max(vehicleState_forceFront)))
+    print("Maximum Lateral force on Rear wheel : {}".format(max(vehicleState_forceRear)))
 
 
 plt.figure(3)
