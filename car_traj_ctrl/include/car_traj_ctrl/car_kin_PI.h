@@ -20,7 +20,7 @@ class car_kin_PI
     ros::Subscriber vehicleState_subscriber;
     ros::Publisher vehicleCommand_publisher, controllerState_publisher, refTrajectory_publisher;
 
-    /* Dynamic Reconfigure*/
+    /* Dynamic Reconfigure */
     dynamic_reconfigure::Server<car_traj_ctrl::gainPIConfig> server;
     dynamic_reconfigure::Server<car_traj_ctrl::gainPIConfig>::CallbackType f;
 
@@ -28,13 +28,14 @@ class car_kin_PI
     double P_dist, l;
     double a, T;
     double xP=0.0, yP=0.0;
-    double xref, yref=0.0, dxref, dyref; 
+    double xref=0.0, yref=0.0, dxref=0.0, dyref=0.0; 
     double Kpx, Kpy;
     double Tix, Tiy;
     double Ts;
     double err_xP, err_yP;
     double integral_x = 0, integral_y = 0; 
     double err_X_max = 0, err_Y_max = 0;
+    double V_sat, Phi_sat;
 
     /* ROS topic callbacks */
     void vehicleState_MessageCallback(const std_msgs::Float64MultiArray::ConstPtr& msg);
