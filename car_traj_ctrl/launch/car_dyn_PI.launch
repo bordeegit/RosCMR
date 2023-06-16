@@ -1,16 +1,35 @@
 <launch>
-  <node pkg="rqt_multiplot" type="rqt_multiplot" name="multiplot" args="--multiplot-config $(find car_traj_ctrl)/script/xyposition.xml --multiplot-run-all"/>
 
-  <node name="bag_recording" pkg="rosbag" type="record" args="-O $(find car_traj_ctrl)/script/recording_PI /car_state /controller_state /ref_traj"/>
+  <!--- Modifing ROS console output format for readability -->
+  <env name="ROSCONSOLE_FORMAT" value="[${severity}]: ${message}"/>
 
-  <!--- Run car simulator node -->
+  <!--- Arguments from command line -->
+  <arg name="Q4" default="False"/>
+  <arg name="tune" default="False"/>
+
+  <!--- Run multiplot for visualization, loading configuration from config/xyposition.xml -->
+  <node pkg="rqt_multiplot" type="rqt_multiplot" name="multiplot" args="--multiplot-config $(find car_traj_ctrl)/config/xyposition.xml --multiplot-run-all"/>
+
+  <!--- Start bag recording, saving it in script when the simulation is terminated -->
+  <node name="bag_recording" pkg="rosbag" type="record" args="-O $(find car_traj_ctrl)/script/rec_dyn /car_state /controller_state /ref_traj"/>
+
+  <!--- Run dynamic reconfigure, if 'tune' flag is set to true -->
+  <group if="$(arg tune)">
+    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="reconfigure"/>
+  </group>
+
+  <!--- Run car simulator node, with Fiala tyre model if 'Q4' flag is set to true -->
   <node pkg="car_simulator" type="car_sim" respawn="false" name="car_sim" output="screen">
     <rosparam file="$(find car_simulator)/config/car_params.yaml" command="load" />
+    <param name="/tyre_model" value="1" if="$(arg Q4)"/>
     <rosparam param="/use_sim_time">true</rosparam>
   </node> 
 
-  <!--- Run linerizing controller node -->
+  <!--- Run controller node, decreasing the value of T by 25% if 'Q4' is set to true -->
   <node pkg="car_traj_ctrl" type="car_kin_PI" respawn="false" name="car_kin_PI" output="screen">
     <rosparam file="$(find car_traj_ctrl)/config/car_kin_PI.yaml" command="load" />
+    <param name="/T" value="2.85" if="$(arg Q4)"/>
   </node> 
+
 </launch>
+

@@ -116,7 +116,7 @@ void car_sim::RunPeriodically(void)
 
         ros::spinOnce();
 
-        usleep(100);
+        usleep(1000);
     }
 }
 

@@ -19,6 +19,8 @@ car_kin_fblin::~car_kin_fblin()
 
 void car_kin_fblin::control_transformation(double vPx, double vPy, double& v, double& phi)
 {
+
+    // Feedback linearization equations, based on the kinematic bicycle model
     v = vPx*std::cos(theta)+vPy*std::sin(theta);
 
     if (std::fabs(v)>0.01)

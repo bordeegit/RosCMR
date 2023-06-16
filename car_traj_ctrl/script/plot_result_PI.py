@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as numint
 
+# Flag used for Tyre Forces visualization
+KIN_FLAG = False
+
 # Read data from bag
 bag = rosbag.Bag(sys.argv[1])
 
@@ -31,7 +34,7 @@ controllerState_xPintegral = []
 controllerState_yPintegral = []
 
 
-# Trajectory generated
+# Trajectory generated published by the controller
 err_time = []
 traj_x = []
 traj_y = []
@@ -45,9 +48,11 @@ for topic, msg, t in bag.read_messages():
         vehicleState_theta.append(msg.data[3])
         vehicleState_velocity.append(msg.data[4])
         vehicleState_steer.append(msg.data[5])
-        vehicleState_forceFront.append(msg.data[10])
-        vehicleState_forceRear.append(msg.data[11])
-
+        try:
+            vehicleState_forceFront.append(msg.data[10])
+            vehicleState_forceRear.append(msg.data[11])
+        except:
+            KIN_FLAG = True
 
     if topic == "/controller_state":
         controllerState_time.append(msg.data[0])
@@ -69,12 +74,12 @@ for topic, msg, t in bag.read_messages():
 
 bag.close()
 
-#Trajectory Data
-a = 2
-T = 3.8
-xref = a*np.sin(np.multiply(2*math.pi/T,vehicleState_time))
-yref = a*np.multiply(np.sin(np.multiply(2*math.pi/T,vehicleState_time)),
-                                 np.cos(np.multiply(2*math.pi/T,vehicleState_time)))
+# Trajectory Data, used to check how accurate the trajectory generation was
+#a = 2
+#T = 3.8
+#xref = a*np.sin(np.multiply(2*math.pi/T,vehicleState_time))
+#yref = a*np.multiply(np.sin(np.multiply(2*math.pi/T,vehicleState_time)),
+#                                 np.cos(np.multiply(2*math.pi/T,vehicleState_time)))
 
 
 # Plot data
@@ -89,16 +94,19 @@ plt.legend(loc="best")
 plt.xlabel("x [m]")
 plt.ylabel("y [m]")
 
-
-plt.figure(2)
-plt.subplot(211)
-plt.plot(vehicleState_time,vehicleState_forceFront)
-plt.xlabel("Time [s]")
-plt.ylabel("Force Front wheel [m/s]")
-plt.subplot(212)
-plt.plot(vehicleState_time,vehicleState_forceRear)
-plt.xlabel("Time [s]")
-plt.ylabel("Force Rear wheel [rad]")
+# Plot the wheel forces only if the bag contains a dynamic model simulation
+if not KIN_FLAG:
+    plt.figure(2)
+    plt.subplot(211)
+    plt.plot(vehicleState_time,vehicleState_forceFront)
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force Front wheel [N]")
+    plt.subplot(212)
+    plt.plot(vehicleState_time,vehicleState_forceRear)
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force Rear wheel [N]")
+    print("Maximum Lateral force on Front wheel : {}".format(max(vehicleState_forceFront)))
+    print("Maximum Lateral force on Rear wheel : {}".format(max(vehicleState_forceRear)))
 
 
 plt.figure(3)
@@ -121,48 +129,53 @@ plt.ylabel("theta [deg]")
 
 
 plt.figure(4)
-plt.subplot(221)
+plt.subplot(211)
 plt.plot(controllerState_time,controllerState_velocity)
 plt.xlabel("Time [s]")
 plt.ylabel("Long. Velocity Actuation [m/s]")
-plt.subplot(222)
+plt.subplot(212)
 plt.plot(controllerState_time,controllerState_steer)
 plt.xlabel("Time [s]")
-plt.ylabel("Steer Actuation [m/s]")
-plt.subplot(223)
-plt.plot(controllerState_time,controllerState_vPx)
-plt.xlabel("Time [s]")
-plt.ylabel("vPx [m/s]")
-plt.subplot(224)
-plt.plot(controllerState_time,controllerState_vPy)
-plt.xlabel("Time [s]")
-plt.ylabel("vPy [m/s]")
+plt.ylabel("Steer Actuation [rad/s]")
+#plt.subplot(223)
+#plt.plot(controllerState_time,controllerState_vPx)
+#plt.xlabel("Time [s]")
+#plt.ylabel("vPx [m/s]")
+#plt.subplot(224)
+#plt.plot(controllerState_time,controllerState_vPy)
+#plt.xlabel("Time [s]")
+#plt.ylabel("vPy [m/s]")
 
 
-
-#Changed index of vehicleState_x/y to match with controllerState size
-#   this will lose some values of vehicleState or add some 0s, but it fixes the issue
-
-#TODO: problem here, if i slice the index of vehicle state by 10 the timing doesn't match, so we get constant error
-
+# From the controller data we can get only the error on point P, since that is what it is considered 
+# What we want to really control is however the center of the car (that is what the trajectory generation considers)
+# Since the controller and the simulator run at different frequencies, the published messages from the trajectory 
+#   generation and the actual car position have different sizes, hence the interpolation.
 traj_x_interp = np.interp(vehicleState_time, err_time, traj_x)
 traj_y_interp = np.interp(vehicleState_time, err_time, traj_y)
 
+# We manually compute the error on X/Y as err_x(k) = |X(k) - X_ref(k)|
 err_x = [abs(v - t) for v, t in zip(vehicleState_x, traj_x_interp)]
 err_y = [abs(v - t) for v, t in zip(vehicleState_y, traj_y_interp)]
 
-err_xref = [abs(v - t) for v, t in zip(vehicleState_x, xref)]
+# The error vector considered for the computation of the maximum error is the initial error vector with 
+#   the first 5 seconds of simulation removed, so that the initial transient is not considered
+err_x_max = max(err_x[2000::])
+err_y_max = max(err_y[2000::])
+print("Maximum error on X : {}".format(err_x_max))
+print("Maximum error on Y : {}".format(err_y_max))
 
 plt.figure(5)
 plt.subplot(211)
+plt.axhline(y = err_x_max, color = 'r', linestyle = '--')
 plt.plot(vehicleState_time, err_x)
-plt.plot(vehicleState_time, err_xref, 'r--')
 plt.xlabel("Time [s]")
 plt.ylabel("Error on x [m]")
 plt.subplot(212)
+plt.axhline(y = err_y_max, color = 'r', linestyle = '--')
 plt.plot(vehicleState_time,err_y)
 plt.xlabel("Time [s]")
-plt.ylabel("Error on y [m]")
+plt.ylabel("Error on y [m]")    
 
 
 plt.figure(6)
@@ -175,16 +188,6 @@ plt.plot(err_time[:len(err_time)],[abs(ele) for ele in controllerState_yPerr])
 plt.xlabel("Time [s]")
 plt.ylabel("Error on yP [m]")
 
-
-plt.figure(7)
-plt.subplot(211)
-plt.plot(controllerState_time, controllerState_xPintegral)
-plt.xlabel("Time [s]")
-plt.ylabel("Integral term xP")
-plt.subplot(212)
-plt.plot(controllerState_time, controllerState_yPintegral)
-plt.xlabel("Time [s]")
-plt.ylabel("Integral term yP")
 
 plt.show(block=False)
 

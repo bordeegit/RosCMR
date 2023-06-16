@@ -1,6 +1,6 @@
 <launch>
   <!--- Run bag recording -->
-  <node name="bag_recording" pkg="rosbag" type="record" args="-O $(find car_simulator)/script/recording_base /car_state"/>
+  <node name="bag_recording" pkg="rosbag" type="record" args="-O $(find car_simulator)/script/rec /car_state"/>
 
   <!--- Run single track simulator node -->
   <node pkg="car_simulator" type="car_sim" respawn="false" name="car_sim" output="screen">

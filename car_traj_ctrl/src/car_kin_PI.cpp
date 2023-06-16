@@ -50,6 +50,15 @@ void car_kin_PI::Prepare(void)
     if (false == Handle.getParam(FullParamName, Ts))
         ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
 
+    FullParamName = ros::this_node::getName()+"/V_sat";
+    if (false == Handle.getParam(FullParamName, V_sat))
+        ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
+
+    FullParamName = ros::this_node::getName()+"/Phi_sat";
+    if (false == Handle.getParam(FullParamName, Phi_sat))
+        ROS_ERROR("Node %s: unable to retrieve parameter %s.", ros::this_node::getName().c_str(), FullParamName.c_str());
+
+
     /* ROS topics */
     vehicleState_subscriber = Handle.subscribe("/car_state", 1, &car_kin_PI::vehicleState_MessageCallback, this);
     vehicleCommand_publisher = Handle.advertise<std_msgs::Float64MultiArray>("/car_input", 1);
@@ -62,6 +71,10 @@ void car_kin_PI::Prepare(void)
 
     // Initialize controller parameters
     controller->set_carParam(l);
+
+    /* Dynamic reconfigure init */
+    f = boost::bind(&car_kin_PI::DynReconfigCallback, this, _1, _2);
+    server.setCallback(f);
 
     ROS_INFO("Node %s ready to run.", ros::this_node::getName().c_str());
 }
@@ -90,6 +103,19 @@ void car_kin_PI::Shutdown(void)
     ROS_INFO("Node %s shutting down.", ros::this_node::getName().c_str());
 }
 
+void car_kin_PI::DynReconfigCallback(car_traj_ctrl::gainPIConfig &config, uint32_t level) {
+  
+  Kpx = config.Kpx;
+  Kpy = config.Kpy; 
+  Tix = config.Tix;
+  Tiy = config.Tiy;
+  Ts = config.Ts; 
+
+  
+  ROS_INFO("[GainsUpdate] Kpx: %f Kpy: %f Tix: %f Tiy: %f Ts: %f", config.Kpx, config.Kpy, config.Tix, config.Tiy, config.Ts);
+
+}
+
 void car_kin_PI::vehicleState_MessageCallback(const std_msgs::Float64MultiArray::ConstPtr& msg)
 {
     // Input command: t, msg->data[0]; x, msg->data[1]; y, msg->data[2]; theta, msg->data[3];
@@ -116,25 +142,19 @@ void car_kin_PI::trajectoryGeneration_eight(void){
 
 void car_kin_PI::trajectoryGeneration_step(void){
 
+    // Generation of consecutive unitary steps
+    //  to test the system reaction
     const double t = ros::Time::now().toSec();
-    xref = t/2;
+    xref = t;
 
-    /*
-    if (t <= 10){
-        xref = t;
-    }
-    else{
-        xref = 0;
-    }
-    */
-
-    // Goes up/down every 10 secs
-    if(std::fmod(t,20) < 10 ){
+    // Goes up/down every 10 secs (or depending on scaling on xref)
+    if(std::fmod(xref,10) < 5 ){
         yref = 0;
     }
     else{
-        yref = 0.5;
+        yref = 1;
     }
+    // In this case the FeedForward action is not considered
     dxref = 0;
     dyref = 0;
 
@@ -142,6 +162,7 @@ void car_kin_PI::trajectoryGeneration_step(void){
 
 void car_kin_PI::trajectoryGeneration_sin(void){
 
+    // Generation of sinusoidal reference on Y
     const double t = ros::Time::now().toSec();
     xref = t;
     yref = sin(t);
@@ -152,9 +173,11 @@ void car_kin_PI::trajectoryGeneration_sin(void){
 
 void car_kin_PI::control_FFPI(double& xPref, double& yPref, double& vPx,double& vPy){
 
+    // Compute error
     err_xP = xPref - xP;
     err_yP = yPref - yP;
 
+    // Print maximum error 
     if (err_X_max < std::fabs(err_xP) || err_Y_max < std::fabs(err_yP)) {
         if (err_X_max < std::fabs(err_xP)) {
             err_X_max = std::fabs(err_xP); 
@@ -164,20 +187,19 @@ void car_kin_PI::control_FFPI(double& xPref, double& yPref, double& vPx,double& 
         ROS_INFO("Last maximum error (X, Y) : (%.4f, %.4f)", err_X_max, err_Y_max);
     }
 
+    // PI + FF control action
+    vPx = dxref + Kpx*(err_xP + integral_x/Tix);
+    vPy = dyref + Kpy*(err_yP + integral_y/Tiy);
+
+    // Update the integral error, with Forward Euler
     integral_x += err_xP*Ts;
     integral_y += err_yP*Ts;
-    vPx = dxref + Kpx*err_xP + integral_x*Tix;
-    vPy = dyref + Kpy*err_yP + integral_y*Tiy;
-
-    // Controller Form 
-    // vP = dref + Kp*(err_xP + 1/Ti*integral_x)
 
 }
 
 void car_kin_PI::controlSaturation(double& v, double& phi){
 
-    double V_sat = 6, Phi_sat = 2;
-    
+    // Saturation on the actual control action
     if(v>V_sat){
         v = V_sat;
     }else if (v<-V_sat){
@@ -195,32 +217,35 @@ void car_kin_PI::controlSaturation(double& v, double& phi){
 void car_kin_PI::PeriodicTask(void)
 {
 
-    //TODO: add computation of maximum error
-
-    /*  Generate trajectory */
+    /*  Generate trajectory (xref,yref) */
+    // For testing, a step ir a sinuoidal trajectory can be selected, beyond the standard eight shape one
     trajectoryGeneration_eight();
     //trajectoryGeneration_step();
     //trajectoryGeneration_sin();
 
-    /*  Tranforms in P  */
+
+    /*  Tranforms in P of position and reference */
     double xPref, yPref;
     double vPx, vPy;
 
     controller->output_transformation(xP, yP);    
     controller->reference_transformation(xref, yref, xPref, yPref);
 
-    /*  Generate reference commands, FF+PI Controller*/
+
+    /*  Generate reference commands, FF+PI Controller */
     control_FFPI(xPref, yPref, vPx, vPy);
+
 
     /*  Compute the control action */
     double v, phi;
     controller->control_transformation(vPx, vPy, v, phi);
-    
+
 
     /* Saturation */
-    //controlSaturation(v, phi);
+    controlSaturation(v, phi);
 
 
+    /* Retrive time to publish all messages simultaneously*/
     double time;
     time = ros::Time::now().toSec();
 
